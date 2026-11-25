@@ -13,6 +13,8 @@
 
 **GROUPON POWER** is a production-grade Enterprise Workforce & Payroll ERP designed for manufacturing plants, infrastructure projects, and engineering establishments. It automates daily wage tracking, biometric attendance, overtime calculations, statutory deductions (EPF, ESIC, Professional Tax, TDS), employee loan/advance deductions, locked salary registers, payslip generation, and corporate bank transfer reconciliation.
 
+**Live demo:** [https://power-payroll-in-rk9j.vercel.app](https://power-payroll-in-rk9j.vercel.app)
+
 ### Supported Workforce Types:
 - **Daily Wage Workers** (Basic = Daily rate × Payable days)
 - **Monthly Salaried Staff** (Basic adjusted by calendar payable days)
