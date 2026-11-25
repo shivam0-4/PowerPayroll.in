@@ -117,6 +117,15 @@ This launches:
 - `backend` (Flask REST API on port 5000)
 - `frontend` (Nginx + React Vite on port 80)
 
+### Option C: Vercel (Demo Deployment)
+
+1. Import this GitHub repository into Vercel and set the project root to the repository root.
+2. Provision a PostgreSQL database through Vercel Marketplace or another hosted PostgreSQL provider.
+3. Connect the database to the Vercel project with the `DATABASE` environment-variable prefix; the API uses the generated `DATABASE_POSTGRES_URL`. Add separate, strong random `SECRET_KEY` and `JWT_SECRET_KEY` values to the Vercel project.
+4. Deploy the `main` branch. Vercel builds the React frontend and routes `/api/*` requests to the Flask Python function.
+
+The database and secrets are required; the function intentionally fails to start if any are missing. The function initializes an empty database with synthetic demo data. This setup is for demo/testing only: do not enter real employee, payroll, bank, or identity data. Choose persistent paid database resources and complete a security review before production use.
+
 ---
 
 ## 6. Running Automated Tests
