@@ -101,6 +101,17 @@ export interface Employee {
   pt_applicable: boolean;
   tds_applicable: boolean;
   salary_structure?: SalaryStructure;
+  documents?: EmployeeDocument[];
+}
+
+export interface EmployeeDocument {
+  id: number;
+  employee_id: number;
+  doc_type: string;
+  doc_name: string;
+  file_path: string;
+  file_size_bytes: number;
+  uploaded_at: string;
 }
 
 export interface SalaryStructure {

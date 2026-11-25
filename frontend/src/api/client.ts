@@ -13,10 +13,10 @@ export class ApiError extends Error {
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('groupon_token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) };
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (token) {
     headers['Authorization'] = 'Bearer ' + token;
@@ -88,6 +88,22 @@ export const api = {
   getEmployee: (id: number) => request<{ employee: any }>(`/employees/${id}`),
   createEmployee: (data: any) => request<{ message: string; employee: any }>('/employees', { method: 'POST', body: JSON.stringify(data) }),
   updateEmployee: (id: number, data: any) => request<{ message: string; employee: any }>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  uploadEmployeeCv: (id: number, file: File) => {
+    const body = new FormData();
+    body.append('file', file);
+    return request<{ message: string; document: any }>(`/employees/${id}/cv`, { method: 'POST', body });
+  },
+  downloadEmployeeDocument: async (id: number, filename: string) => {
+    const response = await request<Response>(`/employees/documents/${id}/download`);
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  },
   toggleEmployeeStatus: (id: number) => request<{ message: string; employee: any }>(`/employees/${id}/toggle-status`, { method: 'PUT' }),
   bulkImportEmployees: (rows: any[]) => request<{ message: string; imported: number; errors: string[] }>('/employees/bulk-import', { method: 'POST', body: JSON.stringify({ rows }) }),
 

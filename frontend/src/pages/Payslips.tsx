@@ -4,6 +4,7 @@ import { PayrollPeriod, PayrollRecord, PayslipDetail } from '../types';
 import { useToast } from '../context/ToastContext';
 import { Badge } from '../components/common/Badge';
 import { Printer, Download, Eye, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const Payslips: React.FC = () => {
   const [periods, setPeriods] = useState<PayrollPeriod[]>([]);
@@ -172,7 +173,9 @@ export const Payslips: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 max-h-[70vh] overflow-y-auto pr-1">
-            {records.map((r) => (
+            {loading ? (
+              <div className="py-8 text-center text-xs text-slate-400">Loading payroll records...</div>
+            ) : records.map((r) => (
               <button
                 key={r.id}
                 onClick={() => loadSinglePayslip(r.id)}
@@ -199,7 +202,11 @@ export const Payslips: React.FC = () => {
 
         {/* Right Column: Payslip Preview Document */}
         <div className="lg:col-span-8">
-          {selectedPayslip ? (
+          {loading ? (
+            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 shadow-sm text-center text-xs text-slate-400">
+              Loading payslip details...
+            </div>
+          ) : selectedPayslip ? (
             <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-md printable-area text-slate-900 space-y-6">
               {/* Payslip Header */}
               <div className="border-b-2 border-brand-900 pb-4 flex justify-between items-start">
@@ -372,8 +379,30 @@ export const Payslips: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center text-slate-400 text-xs">
-              Select a worker on the left to view the payslip preview.
+            <div className="bg-white p-8 sm:p-12 rounded-2xl border border-slate-200 shadow-sm text-center text-xs">
+              <ShieldCheck className="mx-auto mb-3 h-9 w-9 text-slate-300" />
+              <h2 className="font-bold text-slate-800">
+                {records.length === 0
+                  ? 'No payroll records in this cycle'
+                  : records.some((record) => record.payslip_number)
+                  ? 'Select a worker to view the payslip'
+                  : 'Official payslips are not generated yet'}
+              </h2>
+              <p className="mx-auto mt-2 max-w-lg text-slate-500">
+                {records.length === 0
+                  ? 'Run the payroll calculation first to create employee records for this period.'
+                  : records.some((record) => record.payslip_number)
+                  ? 'Choose a worker from the list to preview their payslip.'
+                  : 'Review and approve the calculated payroll, then lock the period to generate official payslips.'}
+              </p>
+              {!records.some((record) => record.payslip_number) && (
+                <Link
+                  to="/payroll"
+                  className="mt-4 inline-flex rounded-lg bg-brand-800 px-3 py-2 font-bold text-gold-400 hover:bg-brand-900"
+                >
+                  Open Payroll
+                </Link>
+              )}
             </div>
           )}
         </div>

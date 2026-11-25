@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api/client';
-import { Employee, Department, WorkLocation } from '../types';
+import { Employee, EmployeeDocument, Department, WorkLocation } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { Badge } from '../components/common/Badge';
@@ -39,6 +39,8 @@ export const Employees: React.FC = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployeeDocuments, setSelectedEmployeeDocuments] = useState<EmployeeDocument[]>([]);
+  const [cvFile, setCvFile] = useState<File | null>(null);
 
   // Form State
   const [formData, setFormData] = useState<any>({
@@ -117,20 +119,35 @@ export const Employees: React.FC = () => {
 
   const handleSaveEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
+    let savedEmployee: Employee;
     try {
       if (isEditModalOpen && selectedEmployee) {
-        await api.updateEmployee(selectedEmployee.id, formData);
-        showToast('Employee updated successfully', 'success');
-        setIsEditModalOpen(false);
+        const result = await api.updateEmployee(selectedEmployee.id, formData);
+        savedEmployee = result.employee;
       } else {
-        await api.createEmployee(formData);
-        showToast('Employee added successfully', 'success');
-        setIsAddModalOpen(false);
+        const result = await api.createEmployee(formData);
+        savedEmployee = result.employee;
       }
-      loadData();
     } catch (err: any) {
       showToast(err.message || 'Action failed', 'error');
+      return;
     }
+
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    if (cvFile) {
+      try {
+        const result = await api.uploadEmployeeCv(savedEmployee.id, cvFile);
+        setSelectedEmployeeDocuments((documents) => [...documents, result.document]);
+        showToast('Employee saved and CV uploaded successfully', 'success');
+      } catch (err: any) {
+        showToast(`Employee saved, but CV upload failed: ${err.message || 'Please try again'}`, 'error');
+      }
+    } else {
+      showToast(isEditModalOpen ? 'Employee updated successfully' : 'Employee added successfully', 'success');
+    }
+    setCvFile(null);
+    loadData();
   };
 
   const handleToggleStatus = async (emp: Employee) => {
@@ -146,19 +163,43 @@ export const Employees: React.FC = () => {
     }
   };
 
-  const openEdit = (emp: Employee) => {
+  const openEdit = async (emp: Employee) => {
     setSelectedEmployee(emp);
+    setSelectedEmployeeDocuments(emp.documents || []);
+    setCvFile(null);
     setFormData({
       ...emp,
       department_id: emp.department_id || '',
       location_id: emp.location_id || '',
     });
     setIsEditModalOpen(true);
+    try {
+      const result = await api.getEmployee(emp.id);
+      setSelectedEmployeeDocuments(result.employee.documents || []);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to load employee documents', 'error');
+    }
   };
 
-  const openView = (emp: Employee) => {
+  const openView = async (emp: Employee) => {
     setSelectedEmployee(emp);
+    setSelectedEmployeeDocuments(emp.documents || []);
     setIsViewModalOpen(true);
+    try {
+      const result = await api.getEmployee(emp.id);
+      setSelectedEmployee(result.employee);
+      setSelectedEmployeeDocuments(result.employee.documents || []);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to load employee documents', 'error');
+    }
+  };
+
+  const handleDownloadDocument = async (document: EmployeeDocument) => {
+    try {
+      await api.downloadEmployeeDocument(document.id, document.doc_name);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to download CV', 'error');
+    }
   };
 
   const handleImportSubmit = async () => {
@@ -185,7 +226,7 @@ export const Employees: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a
             href="/api/employees/export/csv"
             download
@@ -233,6 +274,8 @@ export const Employees: React.FC = () => {
                     pt_applicable: true,
                     tds_applicable: false,
                   });
+                  setCvFile(null);
+                  setSelectedEmployeeDocuments([]);
                   setIsAddModalOpen(true);
                 }}
                 className="px-4 py-2 bg-brand-800 hover:bg-brand-900 text-gold-400 rounded-xl text-xs font-bold shadow-md flex items-center space-x-1.5 transition"
@@ -432,11 +475,11 @@ export const Employees: React.FC = () => {
       >
         <form onSubmit={handleSaveEmployee} className="space-y-4">
           {/* Tabs */}
-          <div className="flex border-b border-slate-200 mb-4 text-xs font-bold">
+          <div className="flex overflow-x-auto border-b border-slate-200 mb-4 text-xs font-bold">
             <button
               type="button"
               onClick={() => setActiveTab('personal')}
-              className={`pb-2 px-4 border-b-2 transition ${
+              className={`flex-shrink-0 whitespace-nowrap pb-2 px-4 border-b-2 transition ${
                 activeTab === 'personal'
                   ? 'border-brand-800 text-brand-900'
                   : 'border-transparent text-slate-400 hover:text-slate-700'
@@ -447,7 +490,7 @@ export const Employees: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('employment')}
-              className={`pb-2 px-4 border-b-2 transition ${
+              className={`flex-shrink-0 whitespace-nowrap pb-2 px-4 border-b-2 transition ${
                 activeTab === 'employment'
                   ? 'border-brand-800 text-brand-900'
                   : 'border-transparent text-slate-400 hover:text-slate-700'
@@ -458,7 +501,7 @@ export const Employees: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('financial')}
-              className={`pb-2 px-4 border-b-2 transition ${
+              className={`flex-shrink-0 whitespace-nowrap pb-2 px-4 border-b-2 transition ${
                 activeTab === 'financial'
                   ? 'border-brand-800 text-brand-900'
                   : 'border-transparent text-slate-400 hover:text-slate-700'
@@ -470,7 +513,7 @@ export const Employees: React.FC = () => {
 
           {/* Tab 1: Personal */}
           {activeTab === 'personal' && (
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Full Name *</label>
                 <input
@@ -536,7 +579,7 @@ export const Employees: React.FC = () => {
                 />
               </div>
 
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <label className="font-bold text-slate-700 block mb-1">Address / Worker Colony</label>
                 <textarea
                   rows={2}
@@ -550,7 +593,7 @@ export const Employees: React.FC = () => {
 
           {/* Tab 2: Employment */}
           {activeTab === 'employment' && (
-            <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Designation *</label>
                 <input
@@ -630,13 +673,35 @@ export const Employees: React.FC = () => {
                   className="w-full p-2 border border-slate-200 rounded-lg"
                 />
               </div>
+              <div className="col-span-1 sm:col-span-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3">
+                <label className="font-bold text-slate-800 block mb-1">Upload CV / Resume</label>
+                <p className="text-[11px] text-slate-500 mb-2">PDF, DOC, or DOCX; maximum file size 16 MB.</p>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(event) => setCvFile(event.target.files?.[0] || null)}
+                  className="block w-full text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-xs file:font-semibold file:text-brand-900"
+                />
+                {cvFile && <p className="mt-2 break-all text-[11px] font-semibold text-brand-800">Selected: {cvFile.name}</p>}
+                {selectedEmployeeDocuments.filter((document) => document.doc_type === 'CV').map((document) => (
+                  <button
+                    key={document.id}
+                    type="button"
+                    onClick={() => handleDownloadDocument(document)}
+                    className="mt-2 flex max-w-full items-center gap-1.5 break-all text-left text-[11px] font-semibold text-brand-800 hover:underline"
+                  >
+                    <Download className="h-3.5 w-3.5 flex-shrink-0" />
+                    Current CV: {document.doc_name}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
           {/* Tab 3: Financial & Statutory */}
           {activeTab === 'financial' && (
             <div className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Wage Type</label>
                   <select
@@ -672,7 +737,7 @@ export const Employees: React.FC = () => {
 
               <div className="border-t border-slate-100 pt-3">
                 <div className="font-bold text-slate-800 mb-2">Bank Account for Salary Disbursal</div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div>
                     <label className="font-medium text-slate-600 block mb-1">Bank Name</label>
                     <input
@@ -709,7 +774,7 @@ export const Employees: React.FC = () => {
 
               <div className="border-t border-slate-100 pt-3">
                 <div className="font-bold text-slate-800 mb-2">Statutory Identifiers & Applicability</div>
-                <div className="grid grid-cols-3 gap-2 mb-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
                   <div>
                     <label className="font-medium text-slate-600 block mb-1">UAN (PF Number)</label>
                     <input
@@ -741,7 +806,7 @@ export const Employees: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex space-x-4 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   <label className="flex items-center space-x-1.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -849,6 +914,27 @@ export const Employees: React.FC = () => {
                   <span className="text-slate-400 text-[10px] block">ESIC Number</span>
                   <span className="font-mono font-bold text-slate-700">{selectedEmployee.esic_ip_number || 'N/A'}</span>
                 </div>
+              </div>
+
+              <div className="border border-slate-200 p-3 rounded-xl space-y-2">
+                <div className="font-bold text-slate-900 border-b pb-1">CV / Resume</div>
+                {selectedEmployeeDocuments.filter((document) => document.doc_type === 'CV').length ? (
+                  selectedEmployeeDocuments
+                    .filter((document) => document.doc_type === 'CV')
+                    .map((document) => (
+                      <button
+                        key={document.id}
+                        type="button"
+                        onClick={() => handleDownloadDocument(document)}
+                        className="flex max-w-full items-center gap-2 break-all text-left font-semibold text-brand-800 hover:underline"
+                      >
+                        <Download className="h-4 w-4 flex-shrink-0" />
+                        {document.doc_name}
+                      </button>
+                    ))
+                ) : (
+                  <span className="text-slate-500">No CV uploaded.</span>
+                )}
               </div>
             </div>
           </div>

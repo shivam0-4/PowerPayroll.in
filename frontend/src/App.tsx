@@ -17,6 +17,7 @@ import { Statutory } from './pages/Statutory';
 import { Reports } from './pages/Reports';
 import { CompanySettings } from './pages/CompanySettings';
 import { UsersPage } from './pages/Users';
+import { CvUpload } from './pages/CvUpload';
 
 export function App() {
   return (
@@ -29,6 +30,7 @@ export function App() {
             <Route path="/" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="employees" element={<Employees />} />
+              <Route path="cv-upload" element={<CvUpload />} />
               <Route path="attendance" element={<AttendancePage />} />
               <Route path="wages" element={<WageStructures />} />
               <Route path="advances" element={<Advances />} />

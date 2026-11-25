@@ -14,6 +14,7 @@ import { Modal } from '../components/common/Modal';
 import { OneTapPayModal } from '../components/payments/OneTapPayModal';
 import { SinglePayModal } from '../components/payments/SinglePayModal';
 import { PaymentReceiptModal } from '../components/payments/PaymentReceiptModal';
+import { Link } from 'react-router-dom';
 import {
   CreditCard,
   CheckCircle2,
@@ -286,10 +287,10 @@ export const Payments: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-200 text-xs font-bold space-x-1">
+      <div className="flex overflow-x-auto border-b border-slate-200 text-xs font-bold space-x-1">
         <button
           onClick={() => setActiveTab('register')}
-          className={`px-4 py-2.5 border-b-2 flex items-center space-x-2 transition ${
+          className={`flex flex-shrink-0 items-center space-x-2 whitespace-nowrap px-4 py-2.5 border-b-2 transition ${
             activeTab === 'register'
               ? 'border-brand-800 text-brand-900'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -301,7 +302,7 @@ export const Payments: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('history')}
-          className={`px-4 py-2.5 border-b-2 flex items-center space-x-2 transition ${
+          className={`flex flex-shrink-0 items-center space-x-2 whitespace-nowrap px-4 py-2.5 border-b-2 transition ${
             activeTab === 'history'
               ? 'border-brand-800 text-brand-900'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -313,7 +314,7 @@ export const Payments: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('reconciliation')}
-          className={`px-4 py-2.5 border-b-2 flex items-center space-x-2 transition ${
+          className={`flex flex-shrink-0 items-center space-x-2 whitespace-nowrap px-4 py-2.5 border-b-2 transition ${
             activeTab === 'reconciliation'
               ? 'border-brand-800 text-brand-900'
               : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -402,7 +403,7 @@ export const Payments: React.FC = () => {
                   placeholder="Search worker name or code..."
                   value={searchFilter}
                   onChange={(e) => setSearchFilter(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-56"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-full sm:w-56"
                 />
               </div>
 
@@ -491,8 +492,27 @@ export const Payments: React.FC = () => {
                     </tr>
                   ) : filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-10 text-slate-400">
-                        No payment records matching criteria.
+                      <td colSpan={9} className="py-10 text-center text-slate-400">
+                        {payments.length === 0 ? (
+                          <div className="mx-auto flex max-w-md flex-col items-center gap-2 px-4">
+                            <CreditCard className="h-8 w-8 text-slate-300" />
+                            <span className="font-bold text-slate-700">No salary payment records yet</span>
+                            <span>
+                              Payment records are created after payroll is calculated. Check attendance and wages,
+                              then calculate a payroll period to populate this register.
+                            </span>
+                            <Link
+                              to="/payroll"
+                              className="mt-1 rounded-lg bg-brand-800 px-3 py-2 font-bold text-gold-400 hover:bg-brand-900"
+                            >
+                              Open Payroll
+                            </Link>
+                          </div>
+                        ) : (
+                          <div className="mx-auto max-w-md px-4">
+                            No payment records match these filters. Clear the filters or choose another payroll period.
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ) : (
@@ -580,7 +600,7 @@ export const Payments: React.FC = () => {
                   value={historySearch}
                   onChange={(e) => setHistorySearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && loadHistory()}
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-60"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-full sm:w-60"
                 />
               </div>
 
@@ -650,8 +670,11 @@ export const Payments: React.FC = () => {
                     <tr>
                       <td colSpan={12} className="text-center py-12 text-slate-400">
                         <History className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                        <span className="font-bold text-slate-600 block">No Disbursal Transactions Found</span>
-                        <span>Initiate One-Tap Payouts or individual settlements to view immutable payment history.</span>
+                        <span className="font-bold text-slate-600 block">No payment transactions yet</span>
+                        <span>
+                          Transactions appear after a salary payment is initiated. If the salary register is empty,
+                          calculate a payroll period first.
+                        </span>
                       </td>
                     </tr>
                   ) : (

@@ -1,8 +1,11 @@
 import io
 import csv
+import os
+import uuid
 from datetime import datetime, date
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app, send_from_directory
 from flask_jwt_extended import get_jwt_identity
+from werkzeug.utils import secure_filename
 from app.database import db
 from app.models.employee import Employee, SalaryStructure, EmployeeDocument
 from app.models.company import Department, WorkLocation, Company
@@ -220,6 +223,51 @@ def update_employee(emp_id):
     log_audit(user_id=current_uid, action='EMPLOYEE_UPDATE', entity_type='Employee', entity_id=emp.id)
 
     return jsonify({'message': 'Employee updated successfully', 'employee': emp.to_dict()}), 200
+
+@employee_bp.route('/<int:emp_id>/cv', methods=['POST'])
+@token_required
+@role_required('Super Admin', 'HR Manager', 'Payroll Manager')
+def upload_employee_cv(emp_id):
+    emp = Employee.query.get_or_404(emp_id)
+    uploaded_file = request.files.get('file')
+
+    if not uploaded_file or not uploaded_file.filename:
+        return jsonify({'error': 'Select a CV file to upload'}), 400
+
+    original_name = secure_filename(uploaded_file.filename)
+    extension = original_name.rsplit('.', 1)[-1].lower() if '.' in original_name else ''
+    if not original_name or extension not in {'pdf', 'doc', 'docx'}:
+        return jsonify({'error': 'CV must be a PDF, DOC, or DOCX file'}), 400
+
+    upload_folder = current_app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
+    stored_name = f'{uuid.uuid4().hex}.{extension}'
+    uploaded_file.save(os.path.join(upload_folder, stored_name))
+
+    document = EmployeeDocument(
+        employee_id=emp.id,
+        doc_type='CV',
+        doc_name=original_name,
+        file_path=stored_name,
+        file_size_bytes=os.path.getsize(os.path.join(upload_folder, stored_name))
+    )
+    db.session.add(document)
+    db.session.commit()
+
+    user_id = int(get_jwt_identity())
+    log_audit(user_id=user_id, action='EMPLOYEE_CV_UPLOAD', entity_type='Employee', entity_id=emp.id)
+    return jsonify({'message': 'CV uploaded successfully', 'document': document.to_dict()}), 201
+
+@employee_bp.route('/documents/<int:document_id>/download', methods=['GET'])
+@token_required
+def download_employee_document(document_id):
+    document = EmployeeDocument.query.get_or_404(document_id)
+    return send_from_directory(
+        current_app.config['UPLOAD_FOLDER'],
+        document.file_path,
+        as_attachment=True,
+        download_name=document.doc_name
+    )
 
 @employee_bp.route('/<int:emp_id>/toggle-status', methods=['PUT'])
 @token_required

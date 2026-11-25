@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { Sidebar } from './Sidebar';
@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export const AppLayout: React.FC = () => {
   const { user, isLoading } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -24,10 +25,16 @@ export const AppLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+      <Navbar
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen((isOpen) => !isOpen)}
+      />
+      <div className="flex flex-1 flex-col lg:flex-row">
+        <Sidebar
+          isMobileMenuOpen={isMobileMenuOpen}
+          onNavigate={() => setIsMobileMenuOpen(false)}
+        />
+        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
           <Outlet />
         </main>
       </div>
