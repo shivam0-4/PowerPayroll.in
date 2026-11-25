@@ -1,0 +1,9 @@
+packages:
+  - .
+
+overrides:
+  "@types/estree": 1.0.10
+  "@types/react": 18.3.31
+  caniuse-lite: 1.0.30001827
+  electron-to-chromium: 1.5.493
+  lucide-react: 1.79.0
