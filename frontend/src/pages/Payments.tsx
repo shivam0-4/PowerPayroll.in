@@ -175,6 +175,12 @@ export const Payments: React.FC = () => {
     }
   };
 
+  const handleResetPaymentFilters = () => {
+    setSearchFilter('');
+    setStatusFilter('');
+    setModeFilter('');
+  };
+
   const toggleSelectOne = (id: number) => {
     if (selectedPaymentIds.includes(id)) {
       setSelectedPaymentIds(selectedPaymentIds.filter((pId) => pId !== id));
@@ -432,6 +438,16 @@ export const Payments: React.FC = () => {
                 <option value="UPI">UPI</option>
                 <option value="Cash">Direct Cash</option>
               </select>
+
+              <button
+                type="button"
+                onClick={handleResetPaymentFilters}
+                disabled={!searchFilter && !statusFilter && !modeFilter}
+                className="flex min-h-9 items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                <span>Reset Filters</span>
+              </button>
             </div>
 
             <div className="flex items-center space-x-3 text-xs">
