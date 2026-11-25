@@ -1,0 +1,64 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+pip-wheel-metadata/
+*.egg
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Environment & secrets ─────────────────────────────────────────────────────
+.env
+!.env.example
+
+# ── Database ──────────────────────────────────────────────────────────────────
+*.db
+*.sqlite3
+instance/
+
+# ── Uploads ───────────────────────────────────────────────────────────────────
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# ── Node / Frontend ───────────────────────────────────────────────────────────
+node_modules/
+frontend/dist/
+frontend/.pnpm-store/
+.pnpm-store/
+*.log
+
+# ── Testing ───────────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── IDEs & OS ─────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+# (keep Dockerfiles tracked, ignore compose overrides)
+docker-compose.override.yml
+
+# ── Flask migrations (keep tracked) ──────────────────────────────────────────
+# backend/migrations/   <- keep this
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.bak
+*.tmp

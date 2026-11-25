@@ -1,0 +1,44 @@
+# ── Keeps Docker build context lean ──────────────────────────────────────────
+
+# Python artifacts
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.pytest_cache
+**/*.egg-info
+**/venv
+**/.venv
+**/env
+
+# Node / frontend build
+frontend/node_modules
+frontend/.pnpm-store
+frontend/dist
+
+# Databases
+backend/*.db
+backend/*.sqlite3
+backend/instance/
+
+# Git
+.git
+.gitignore
+
+# Secrets
+.env
+
+# IDEs / OS
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/*.log
+
+# Docs / scripts (not needed inside container)
+*.md
+deploy.bat
+deploy.sh
+dev.bat
